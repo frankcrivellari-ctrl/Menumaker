@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GV-Wochenendseminar Menü-Generator</title>
+<style>
+  body { font-family: -apple-system, Arial, sans-serif; margin: 20px; }
+  h1 { margin-bottom: 12px; }
+  .controls { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); }
+  fieldset { border: 1px solid #ddd; padding: 10px; border-radius: 8px; }
+  legend { font-weight: bold; }
+  button { padding:10px 14px; margin:6px 0; border:1px solid #333; border-radius:8px; cursor:pointer; }
+  .results { display:grid; gap:12px; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); margin-top:16px; }
+  .card { border:1px solid #e2e2e2; border-radius:10px; padding:12px; background:#fff; }
+  .badge { display:inline-block; border:1px solid #aaa; border-radius:999px; padding:2px 8px; margin-right:6px; font-size:12px; }
+  .muted { color:#666; font-size:12px; }
+</style>
+</head>
+<body>
+<h1>Menü-Generator – Gemeinschaftsverpflegung</h1>
+
+<div class="controls">
+  <fieldset>
+    <legend>Modus</legend>
+    <label><input type="radio" name="modus" value="classic" checked> Klassisch (4 Bausteine)</label>
+    <label><input type="radio" name="modus" value="twocomp"> Zwei-Komponenten</label>
+    <label><input type="radio" name="modus" value="onepot"> One-Pot</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Ernährungsform</legend>
+    <label><input type="radio" name="diet" value="omnivore" checked> Omnivor</label>
+    <label><input type="radio" name="diet" value="vegetarisch"> Vegetarisch</label>
+    <label><input type="radio" name="diet" value="vegan"> Vegan</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Saison</legend>
+    <select id="season">
+      <option value="alle">Alle</option>
+      <option value="fruehling">Frühling</option>
+      <option value="sommer">Sommer</option>
+      <option value="herbst">Herbst</option>
+      <option value="winter">Winter</option>
+    </select>
+  </fieldset>
+
+  <fieldset>
+    <legend>Allergene ausschließen</legend>
+    <label><input type="checkbox" class="allergen" value="gluten"> Gluten</label>
+    <label><input type="checkbox" class="allergen" value="laktose"> Laktose</label>
+    <label><input type="checkbox" class="allergen" value="nuesse"> Nüsse</label>
+    <label><input type="checkbox" class="allergen" value="fisch"> Fisch</label>
+    <label><input type="checkbox" class="allergen" value="schwein"> Schwein</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Anzahl Vorschläge</legend>
+    <input type="number" id="count" min="1" max="12" value="4">
+  </fieldset>
+</div>
+
+<button id="generate">Vorschläge erzeugen</button>
+<span id="status" class="muted"></span>
+<div id="results" class="results"></div>
+
+<script>
+// Daten
+const haupt = ["Hähnchenbrust", "Rinderschmorbraten", "Linsenhack-Bällchen (vegan)", "Gemüse-Lasagne", "Seelachsfilet"];
+const saettigung = ["Kartoffeln", "Reis", "Pasta", "Couscous", "Süßkartoffelwürfel"];
+const gemuese = ["Brokkoli & Karotten", "Ofengemüse", "Rotkohl", "Zucchini-Paprika"];
+const saucen = ["Tomatensugo", "Jus dunkel", "Kräutersauce (vegan)", "Curry-Kokos"];
+
+function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function generateClassic(){
+  return {typ:"Klassisch", haupt:pickRandom(haupt), beilage:pickRandom(saettigung), gemuese:pickRandom(gemuese), sauce:pickRandom(saucen)};
+}
+function generateTwoComp(){
+  return {typ:"Zwei-Komponenten", kombi: pickRandom(haupt)+" + "+pickRandom(saettigung)};
+}
+function generateOnePot(){
+  return {typ:"One-Pot", gericht: pickRandom(haupt)+"-Eintopf mit "+pickRandom(gemuese)};
+}
+
+function render(results){
+  const wrap=document.getElementById("results"); wrap.innerHTML="";
+  results.forEach(r=>{
+    const div=document.createElement("div"); div.className="card";
+    div.innerHTML = `<span class="badge">${r.typ}</span><br>`+
+      (r.haupt? `<b>Haupt:</b> ${r.haupt}<br>`:"")+
+      (r.beilage? `<b>Beilage:</b> ${r.beilage}<br>`:"")+
+      (r.gemuese? `<b>Gemüse:</b> ${r.gemuese}<br>`:"")+
+      (r.sauce? `<b>Sauce:</b> ${r.sauce}<br>`:"")+
+      (r.kombi? `<b>Kombi:</b> ${r.kombi}<br>`:"")+
+      (r.gericht? `<b>Gericht:</b> ${r.gericht}<br>`:"");
+    wrap.appendChild(div);
+  });
+}
+
+document.getElementById("generate").addEventListener("click",()=>{
+  const mode=document.querySelector('input[name="modus"]:checked').value;
+  const n=parseInt(document.getElementById("count").value)||4;
+  const out=[];
+  for(let i=0;i<n;i++){
+    if(mode==="classic") out.push(generateClassic());
+    if(mode==="twocomp") out.push(generateTwoComp());
+    if(mode==="onepot") out.push(generateOnePot());
+  }
+  render(out);
+  document.getElementById("status").textContent=`${out.length} Vorschläge erzeugt`;
+});
+</script>
+</body>
+</html>
